@@ -32,6 +32,7 @@ val name: String = "Scala"
 val age: Int = 25
 ```
 - Funciones: Las funciones en Scala pueden definirse sin paréntesis para parámetros sin valores.
+  - def nombre_funcion(parametro:tipo): tipo_retorno = { instrucciones } 
 ```scala
 def greet(): String = "Hello, Scala!"
 ```
@@ -115,7 +116,14 @@ while (i < 5){
 }
 ```
 
-
+### Ejemplo:
+```scala
+object HolaMundo {
+  def main(args: Array[String]): Unit = {
+    println("!Hola, Mundo!")
+  }
+}
+```
 
 
 

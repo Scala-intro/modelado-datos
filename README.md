@@ -17,6 +17,112 @@
 # 1. Introducción a Spark y Scala
 **Spark** es un motor de procesamiento de datos distribuido que permite manejar grandes volúmenes de información de manera eficiente. Scala es el lenguaje en el que Spark fue originalmente desarrollado, lo que lo hace muy eficiente para este tipo de tareas.
 
+`Scala` es un lenguaje de programación que combina características de programación funcional y orientada a objetos. Se ejecuta en la `JVM (Java Virtual Machine)` y es conocido por su concisión y su capacidad para interactuar con el código Java. Fue creado por Martin Odersky y su principal propósito es mejorar las deficiencias del lenguaje Java mientras mantiene su interoperabilidad.
+
+## **Sintaxis básica de Scala**
+Scala utiliza una sintaxis que es más concisa que la de Java, pero a la vez mantiene la legibilidad y la estructura ordenada. Algunos de los puntos clave son:
+- Definir una variable: En Scala, puedes definir una variable usando `val` (inmutable) o `var` (mutable).
+```scala
+val x = 10 // valor inmutable
+var y = 20 // valor mutable
+```
+- Tipo de datos: Los tipos pueden ser inferidos por el compilador o explícitos:
+```scala
+val name: String = "Scala"
+val age: Int = 25
+```
+- Funciones: Las funciones en Scala pueden definirse sin paréntesis para parámetros sin valores.
+```scala
+def greet(): String = "Hello, Scala!"
+```
+## **Tipos de datos y variables**
+Scala es un lenguaje fuertemente tipado, lo que significa que las variables tienen un tipo específico. Algunos de los tipos de datos más comunes en Scala son:
+
+- Numéricos:
+  - `Int`: Enteros de 32 bits.
+  - `Long`: Enteros de 64 bits.
+  - `Double`: Números de punto flotante de 64 bits.
+  - `Float`: Números de punto flotante de 32 bits.
+
+- Cadenas:
+  - `String`: Representa una secuencia de caracteres
+  ```scala
+  val greeting: String = "Hola"
+  ```
+
+- Booleanos:
+  - `Boolean`: `true` o `false`.
+  ```scala
+    val isActive: Boolean = true
+  ```
+- Colecciones:
+  - `List`: Una lista inmutable.
+  ```scala
+    val numbers = List(1,2,3,4)
+  ```
+  - `Array`: Los Array en Scala son colecciones mutables de tamaño fijo. Una vez que se crea el array con un tamaño específico, puedes cambiar los valores de sus elementos pero no el tamaño.
+  ```scala
+  val arr = Array(1,2,3,4)
+  ```
+  - `Map`: El Map en Scala es una colección que almacena pares clave-valor. Es mutable de forma predeterminada, pero también puedes usar Map inmutable si no deseas que se modifique.
+  ```scala
+  val map = Map("a"->, "b"->2)
+  ```
+  - `ArrayBuffer`: ArrayBuffer es un tipo de colección mutable que actúa como una lista cuyo tamaño puede cambiar dinámicamente, similar a una lista en Python.
+  ```scala
+  import scala.collection.mutable.ArrayBuffer
+  val buffer = ArrayBuffer(1, 2, 3, 4)
+  ```
+  - `ListBuffer`: Otro tipo de colección mutable en Scala es ListBuffer, que también permite modificar su tamaño (agregar o eliminar elementos) pero es más eficiente en la construcción de listas que ArrayBuffer si se realizan muchas modificaciones.
+  ```scala
+  import scala.collection.mutable.ListBuffer
+  val listBuffer = ListBuffer(1, 2, 3, 4)
+  ```
+- Tuplas:
+  - Scala permite crear `tuplas` que pueden contener diferentes tipos de datos.
+  ```scala
+  val person = ("John", 25)
+  ```
+
+
+## **Estructuras de control (if, for, while)**
+Scala soporta estructuras de control similares a otros lenguajes, como `if`, `for`, y `while`.
+
+- if: la expresión if puede retornar un valor, lo que lo hace diferente de otros lenguajes como Java.
+```scala
+val x = 10
+val result = if (x > 5) "Mayor que 5" else "Menor o igual a 5"
+```
+- for:El ciclo for en Scala es muy potente y permite recorrer colecciones de manera funcional. Se puede usar para iterar sobre rangos, listas, o incluso aplicar filtros y transformaciones.
+```scala
+for ( i <- 1 to 5){
+  println(i) // Imprime los números del 1 al 5
+
+}
+```
+También puedes usar un for con filtros:
+```scala
+for ( i <- 1 to 10 if i % 2 == 0){
+  println(i) // Imprime los números pares entre 1 y 10
+}
+```
+- while: El ciclo while es similar a otros lenguajes de programación y ejecuta un bloque de código mientras la condición sea true.
+```scala
+var i = 0
+while (i < 5){
+  println(i)
+  i += 1 
+}
+```
+
+
+
+
+
+
+
+
+
 <hr>
 
 <a name="schema2"></a>

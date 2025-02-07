@@ -63,4 +63,5 @@ object EjemploSql extends App {
 
   joinDF.show()
 
+  spark.stop()
 }

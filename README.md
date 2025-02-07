@@ -369,12 +369,23 @@ Este `import` habilita la interpolación de columnas en `Spark` usando `$`, simp
 1. Carga el archivo usuarios.csv en un DataFrame.
 2. Filtra a los usuarios que vivan en "Madrid" o "Bogotá".
 3. Crea una nueva columna llamada categoria_edad donde:
-4. Si la edad es menor de 30, la categoría es "Joven".
-5. Si la edad es 30 o mayor, la categoría es "Adulto".
+   - Si la edad es menor de 30, la categoría es "Joven". 
+   - Si la edad es 30 o mayor, la categoría es "Adulto".
 6. Ordena el DataFrame por categoria_edad y edad de forma ascendente.
 7. Muestra el resultado final.
 
 [Código](./src/main/scala/ejercicio1.scala)
+
+
+
+# Guía Completa de Modelado de Datos en Scala con Apache Spark
+
+
+
+
+
+
+
 
 
 <hr>

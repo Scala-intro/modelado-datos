@@ -21,7 +21,7 @@ object Ejercicio1 extends App {
   val usuariosFiltrados2 = usuariosDF.filter($"ciudad" === "Madrid" || $"ciudad" === "Bogotá")
   //usuariosFiltrados2.show()
    // Crear una nueva columna `categoria_edad`
-  val usuariosConEdad = usuariosDF.withColumn("categoria_edad",
+  val usuariosConEdad = usuariosFiltrados.withColumn("categoria_edad",
     when($"edad"< 30, "Joven").otherwise("Adulto")
   )
   usuariosConEdad.show()

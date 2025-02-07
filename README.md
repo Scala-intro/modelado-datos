@@ -6,7 +6,7 @@
 3. [Modelado de Datos con Spark DataFrames y Datasets](#schema3)
 4. [Operaciones Básicas](#schema4)
 5. [Ejercicio 1: Análisis Simple de Datos de Usuarios](#schema5)
-
+6. [SQL en Spark](#schema6)
 
 
 <hr>
@@ -321,6 +321,9 @@ println(s"Primer registro: ${df.first()}")
 ```
 
 
+
+
+
 <hr>
 
 <a name="schema4"></a>
@@ -372,3 +375,74 @@ Este `import` habilita la interpolación de columnas en `Spark` usando `$`, simp
 7. Muestra el resultado final.
 
 [Código](./src/main/scala/ejercicio1.scala)
+
+
+<hr>
+
+<a name="schema6"></a>
+
+# 6 SQL en Spark
+Apache Spark permite ejecutar consultas SQL sobre DataFrames de manera similar a cómo se haría en bases de datos tradicionales. Para ello, se pueden registrar DataFrames como tablas temporales y luego realizar consultas SQL directamente sobre ellas.
+
+## **1. Registro de DataFrames como Tablas Temporales**
+
+- Antes de ejecutar consultas SQL en Spark, es necesario registrar un DataFrame como una tabla temporal dentro de `SparkSession`. Esto permite que los datos sean accesibles a través de consultas SQL.
+
+- Registramos el DataFrame como una tabla temporal con `createOrReplaceTempView`:
+```scala
+df.createOrReplaceTempView("employees")
+
+```
+## ** 2. Ejecución de Consultas SQL en Spark**
+
+Una vez que la tabla temporal está registrada, podemos usar `spark.sql()` para ejecutar consultas SQL.
+1. Seleccionar datos con SELECT
+- Podemos usar `SELECT` para obtener datos específicos:
+```scala
+val resultDF = spark.sql("SELECT Name, Salary FROM employess")
+resultDF.show()
+```
+
+2. Filtrar datos con `WHERE`
+
+```scala
+val highSalaryDF = spark.sql("SELECT Name, Salary FROM employees WHERE Salary > 3500")
+highSalaryDF.show()
+```
+
+
+3. Agrupar datos con GROUP BY
+   Si queremos contar cuántos empleados hay en cada departamento:
+```scala
+val departmentCountDF = spark.sql("SELECT Department, COUNT(*) AS Num_Employees FROM employees GROUP BY Department")
+departmentCountDF.show()
+````
+
+4. Calcular agregaciones con `AVG`, `SUM`, `MAX`, `MIN`
+   Podemos calcular el salario promedio por departamento:
+
+```scala
+val avgSalaryDF = spark.sql("SELECT Department, AVG(Salary) AS Avg_Salary FROM employees GROUP BY Department")
+avgSalaryDF.show()
+```
+
+
+5. Ejemplo de empleados ordenados por salario de forma descendente:
+
+```scala
+val sortedDF = spark.sql("SELECT Name, Salary FROM employees ORDER BY Salary DESC")
+sortedDF.show()
+````
+6. `JOIN` entre múltiples tablas
+
+Podemos unir dos DataFrames como si fueran tablas SQL.
+```scala
+ val joinDF = spark.sql(
+    """SELECT e.Name, e.Department, d.Building
+       FROM employees e
+       JOIN departments d
+       on e.Department = d.Department
+
+    """
+  )
+```

@@ -320,10 +320,6 @@ println(s"Total de empleados: ${df.count()}")
 println(s"Primer registro: ${df.first()}")
 ```
 
-
-
-
-
 <hr>
 
 <a name="schema4"></a>
@@ -375,6 +371,84 @@ Este `import` habilita la interpolación de columnas en `Spark` usando `$`, simp
 7. Muestra el resultado final.
 
 [Código](./src/main/scala/ejercicio1.scala)
+
+# Nivel Intermedio
+
+<hr>
+
+<a name="schema6"></a>
+
+# 6. Funciones Agregadas y de Ventana (Window Functions)
+
+## Funciones Agregadas
+- Calcular el ingreso total por categoría:
+  ```scala
+  val ingresosPorCategoria = ventasDF
+  .groupBy("categoria")
+  .agg(sum($"precio" * $"cantidad").alias("ingresos_total"))
+  ```
+  - Contar la cantidad total de productos vendidos por categoría:
+  ```scala
+  val productosVendidos = ventasDF
+    .groupBy("categoria")
+    .agg(sum("cantidad").alias("productos_vendidos"))
+  ```
+## Funciones de Ventana (Window Functions)
+
+Las funciones de ventana en Spark permiten realizar cálculos sobre subconjuntos de filas dentro de un DataFrame, sin agrupar los datos como lo haría GROUP BY.
+
+- ¿Para qué sirven?
+  - Ranking: Asignar rangos dentro de grupos de datos.
+    - Acumulados: Calcular sumas, promedios o conteos progresivos. 
+    - Comparaciones: Obtener valores anteriores o siguientes dentro de una ventana.
+
+- ¿Cómo funciona una función de ventana?
+Las funciones de ventana trabajan sobre un subconjunto de datos (una "ventana"), definido por una partición (`PARTITION BY`) y un orden (`ORDER BY`).
+```scala
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions._
+
+val ventana = Window
+  .partitionBy("columna_particion")   // Define la "ventana" (subgrupo de datos)
+  .orderBy("columna_orden")           // Define el orden dentro de la ventana
+
+df.withColumn("nueva_columna", funcionVentana.over(ventana))
+```
+- Ranking: `row_number()`, `rank()`, `dense_rank()`
+  - Las funciones de ranking asignan números de posición dentro de cada partición de la ventana.
+  - - Ranking de ventas por precio dentro de cada categoría:
+  ```scala
+  val ventanaCategoria = Window.partitionBy("categoria").orderBy($"precio".desc)
+  val rankingVentas = ventasDF.withColumn("ranking_precio",rank().over(ventanaCategoria))
+  ```
+- Acumulados: `sum()`, `avg()`, `count()` con `ROWS BETWEEN`
+  - Las funciones de ventana permiten acumulados progresivos dentro de una partición.
+    - Precio acumulado en cada categoria 
+    ```scala
+    val ventanaAcumulado = Window.partitionBy("categoria").orderBy("precio")
+    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+    val productoAcumulado = ventasDF
+    .withColumn("precio_acumulado",sum("precio").over(ventanaAcumulado))
+    productoAcumulado.show()
+    ```
+
+  - rowsBetween(Window.unboundedPreceding, Window.currentRow) acumula desde el primer valor hasta la fila actual.
+- Comparaciones con lag() y lead()
+   - Ejemplo: Comparar el salario actual con el salario anterior (lag()) y el siguiente (lead())
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

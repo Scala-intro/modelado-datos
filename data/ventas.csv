@@ -1,0 +1,6 @@
+id_venta,producto,categoria,precio,cantidad,fecha
+1,Laptop,Electrónica,1200,2,2023-01-15
+2,Smartphone,Electrónica,800,3,2023-01-20
+3,Camiseta,Ropa,20,5,2023-02-05
+4,Pantalón,Ropa,35,4,2023-02-10
+5,Tablet,Electrónica,600,1,2023-03-12

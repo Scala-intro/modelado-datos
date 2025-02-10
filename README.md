@@ -8,6 +8,8 @@
 5. [Ejercicio 1: Análisis Simple de Datos de Usuarios](#schema5)
 6. [SQL en Spark](#schema6)
 7. [Funciones Agregadas y de Ventana (Window Functions)](#schema7)
+8. [Diseño de Pipelines ETL](#schema8)
+9. [Ejercicio](#schema9)
 
 
 <hr>
@@ -642,3 +644,9 @@ Crea un pipeline ETL que haga lo siguiente:
 - Transformar los datos (limpiar nulos, convertir tipos, hacer agregaciones).
 - Guardar los resultados en formato Parquet.
 
+[ETL Pipeline con Scala y Spark"](./src/main/scala/etl.scala)
+
+
+<hr>
+
+<a name="schema10"></a>

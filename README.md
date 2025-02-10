@@ -7,6 +7,7 @@
 4. [Operaciones Básicas](#schema4)
 5. [Ejercicio 1: Análisis Simple de Datos de Usuarios](#schema5)
 6. [SQL en Spark](#schema6)
+7. [Funciones Agregadas y de Ventana (Window Functions)](#schema7)
 
 
 <hr>
@@ -134,12 +135,6 @@ object HolaMundo {
 }
 ```
 
-
-
-
-
-
-
 <hr>
 
 <a name="schema2"></a>
@@ -246,13 +241,17 @@ object ModeladoDeDatosPrincipiante extends App {
 - `.master("local[*]")`: Indica que la aplicación se ejecutará en modo local utilizando todos los núcleos de CPU disponibles (*).
 - `.getOrCreate()`: Crea una nueva sesión de Spark si no existe; si ya hay una activa, la reutiliza.
 
+
+# Nivel 2: Modelado de Datos con Spark DataFrames y Datasets
+
+
 <hr>
 
 <a name="schema3"></a>
 
 # 3. Modelado de Datos con Spark DataFrames y Datasets
 ## **Creación de DataFrames**
-```
+```scala
 val usuariosDF = spark.read
   .option("header", "true")   // Indica que la primera fila tiene nombres de columnas
   .option("inferSchema", "true") // Inferir automáticamente el tipo de datos
@@ -268,6 +267,25 @@ usuariosDF.show()
   - Usa la SparkSession para leer datos desde una fuente externa. En este caso, un archivo CSV.
 - `.option("header", "true")`
   - Le indica a Spark que la primera fila del CSV contiene los nombres de las columnas.
+
+### Creando el schema
+```scala
+import org.apache.spark.sql.types._
+
+val schema = StructType(Array(
+  StructField("id", IntegerType, nullable = false),
+  StructField("nombre", StringType, nullable = true),
+  StructField("edad", IntegerType, nullable = true),
+  StructField("pais", StringType, nullable = true)
+))
+
+val usuariosDF = spark.read
+  .option("header", "true")
+  .schema(schema)
+  .csv("data/usuarios.csv")
+
+usuariosDF.show()
+```
 
 ## **Transformaciones y Acciones**
 En Apache Spark, las operaciones sobre los datos se dividen en transformaciones y acciones. Las transformaciones permiten definir cómo se deben manipular los datos, mientras que las acciones ejecutan esas transformaciones y devuelven un resultado.
@@ -392,96 +410,6 @@ Este `import` habilita la interpolación de columnas en `Spark` usando `$`, simp
 
 [Código](./src/main/scala/ejercicio1.scala)
 
-# Nivel Intermedio
-
-<hr>
-
-<a name="schema6"></a>
-
-# 6. Funciones Agregadas y de Ventana (Window Functions)
-
-## Funciones Agregadas
-- Calcular el ingreso total por categoría:
-  ```scala
-  val ingresosPorCategoria = ventasDF
-  .groupBy("categoria")
-  .agg(sum($"precio" * $"cantidad").alias("ingresos_total"))
-  ```
-  - Contar la cantidad total de productos vendidos por categoría:
-  ```scala
-  val productosVendidos = ventasDF
-    .groupBy("categoria")
-    .agg(sum("cantidad").alias("productos_vendidos"))
-  ```
-## Funciones de Ventana (Window Functions)
-
-Las funciones de ventana en Spark permiten realizar cálculos sobre subconjuntos de filas dentro de un DataFrame, sin agrupar los datos como lo haría GROUP BY.
-
-- ¿Para qué sirven?
-  - Ranking: Asignar rangos dentro de grupos de datos.
-    - Acumulados: Calcular sumas, promedios o conteos progresivos. 
-    - Comparaciones: Obtener valores anteriores o siguientes dentro de una ventana.
-
-- ¿Cómo funciona una función de ventana?
-Las funciones de ventana trabajan sobre un subconjunto de datos (una "ventana"), definido por una partición (`PARTITION BY`) y un orden (`ORDER BY`).
-```scala
-import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions._
-
-val ventana = Window
-  .partitionBy("columna_particion")   // Define la "ventana" (subgrupo de datos)
-  .orderBy("columna_orden")           // Define el orden dentro de la ventana
-
-df.withColumn("nueva_columna", funcionVentana.over(ventana))
-```
-- Ranking: `row_number()`, `rank()`, `dense_rank()`
-  - Las funciones de ranking asignan números de posición dentro de cada partición de la ventana.
-  - - Ranking de ventas por precio dentro de cada categoría:
-  ```scala
-  val ventanaCategoria = Window.partitionBy("categoria").orderBy($"precio".desc)
-  val rankingVentas = ventasDF.withColumn("ranking_precio",rank().over(ventanaCategoria))
-  ```
-- Acumulados: `sum()`, `avg()`, `count()` con `ROWS BETWEEN`
-  - Las funciones de ventana permiten acumulados progresivos dentro de una partición.
-    - Precio acumulado en cada categoria 
-    ```scala
-    val ventanaAcumulado = Window.partitionBy("categoria").orderBy("precio")
-    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
-
-    val productoAcumulado = ventasDF
-    .withColumn("precio_acumulado",sum("precio").over(ventanaAcumulado))
-    productoAcumulado.show()
-    ```
-
-  - rowsBetween(Window.unboundedPreceding, Window.currentRow) acumula desde el primer valor hasta la fila actual.
-- Comparaciones con lag() y lead()
-   - Ejemplo: Comparar el salario actual con el salario anterior (lag()) y el siguiente (lead())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Guía Completa de Modelado de Datos en Scala con Apache Spark
-
-
-
-
-
-
-
-
-
 <hr>
 
 <a name="schema6"></a>
@@ -551,3 +479,166 @@ Podemos unir dos DataFrames como si fueran tablas SQL.
     """
   )
 ```
+
+<hr>
+
+<a name="schema7"></a>
+
+# 7. Funciones Agregadas y de Ventana (Window Functions)
+
+## Funciones Agregadas
+- Calcular el ingreso total por categoría:
+  ```scala
+  val ingresosPorCategoria = ventasDF
+  .groupBy("categoria")
+  .agg(sum($"precio" * $"cantidad").alias("ingresos_total"))
+  ```
+  - Contar la cantidad total de productos vendidos por categoría:
+  ```scala
+  val productosVendidos = ventasDF
+    .groupBy("categoria")
+    .agg(sum("cantidad").alias("productos_vendidos"))
+  ```
+## Funciones de Ventana (Window Functions)
+
+Las funciones de ventana en Spark permiten realizar cálculos sobre subconjuntos de filas dentro de un DataFrame, sin agrupar los datos como lo haría GROUP BY.
+
+- ¿Para qué sirven?
+  - Ranking: Asignar rangos dentro de grupos de datos.
+    - Acumulados: Calcular sumas, promedios o conteos progresivos. 
+    - Comparaciones: Obtener valores anteriores o siguientes dentro de una ventana.
+
+- ¿Cómo funciona una función de ventana?
+Las funciones de ventana trabajan sobre un subconjunto de datos (una "ventana"), definido por una partición (`PARTITION BY`) y un orden (`ORDER BY`).
+```scala
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions._
+
+val ventana = Window
+  .partitionBy("columna_particion")   // Define la "ventana" (subgrupo de datos)
+  .orderBy("columna_orden")           // Define el orden dentro de la ventana
+
+df.withColumn("nueva_columna", funcionVentana.over(ventana))
+```
+- Ranking: `row_number()`, `rank()`, `dense_rank()`
+  - Las funciones de ranking asignan números de posición dentro de cada partición de la ventana.
+  - - Ranking de ventas por precio dentro de cada categoría:
+  ```scala
+  val ventanaCategoria = Window.partitionBy("categoria").orderBy($"precio".desc)
+  val rankingVentas = ventasDF.withColumn("ranking_precio",rank().over(ventanaCategoria))
+  ```
+- Acumulados: `sum()`, `avg()`, `count()` con `ROWS BETWEEN`
+  - Las funciones de ventana permiten acumulados progresivos dentro de una partición.
+    - Precio acumulado en cada categoria 
+    ```scala
+    val ventanaAcumulado = Window.partitionBy("categoria").orderBy("precio")
+    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+    val productoAcumulado = ventasDF
+    .withColumn("precio_acumulado",sum("precio").over(ventanaAcumulado))
+    productoAcumulado.show()
+    ```
+
+  - rowsBetween(Window.unboundedPreceding, Window.currentRow) acumula desde el primer valor hasta la fila actual.
+- Comparaciones con lag() y lead()
+   - Ejemplo: Comparar el salario actual con el salario anterior (lag()) y el siguiente (lead())
+
+
+
+# Nivel 3: Diseño de Pipelines de Datos Masivos
+
+<hr>
+
+<a name="schema8"></a>
+
+# 8. Diseño de Pipelines ETL
+
+Los pipelines `ETL` (Extract, Transform, Load) son fundamentales en el procesamiento de datos masivos. Un buen pipeline permite la ingesta, transformación y almacenamiento de datos de manera eficiente y escalable.
+
+## Extracción de datos desde múltiples fuentes
+Los datos pueden provenir de diferentes fuentes, como:
+- Archivos: CSV, JSON, Parquet, Avro, ORC.
+- Bases de datos relacionales: MySQL, PostgreSQL, SQL Server.
+- Bases de datos NoSQL: MongoDB, Cassandra, DynamoDB.
+- Sistemas distribuidos: HDFS, Amazon S3, Google Cloud Storage.
+
+En Spark con Scala, la extracción se hace con spark.read:
+```scala
+val pedidosDF = spark.read.option("header", "true").csv("data/pedidos.csv")
+val clientesDF = spark.read.option("header", "true").csv("data/clientes.csv")
+```
+Si la fuente es una base de datos, usamos jdbc:
+
+```scala
+val jdbcDF = spark.read
+.format("jdbc")
+.option("url", "jdbc:mysql://localhost:3306/miDB")
+.option("dbtable", "pedidos")
+.option("user", "usuario")
+.option("password", "contraseña")
+.load()
+```
+## Transformación compleja de datos
+Las transformaciones en Spark se hacen sobre `DataFrames` o `RDDs`. Algunas de las más comunes incluyen:
+
+1. Eliminación de valores nulos
+
+Usamos `filter()` o `na.drop()` para eliminar filas con valores nulos.
+
+```scala
+val pedidosLimpios = pedidosDF.na.drop()
+```
+Si queremos reemplazar valores nulos:
+
+```scala
+val pedidosReemplazados = pedidosDF.na.fill(0, Seq("monto"))
+```
+2. Conversión de tipos de datos
+En Spark, todos los datos leídos desde CSV son tipo String. Para convertirlos a otros tipos:
+
+```scala
+val pedidosTyped = pedidosDF.withColumn("monto", col("monto").cast("double"))
+```
+3. Normalización y agregación
+Podemos normalizar datos para asegurarnos de que estén en un rango específico o agregar valores por grupo:
+
+```scala
+import org.apache.spark.sql.functions._
+
+val pedidosAgrupados = pedidosDF
+  .groupBy("cliente_id")
+  .agg(sum("monto").alias("total_compras"))
+```
+
+## Carga en diferentes destinos
+Podemos almacenar los datos en distintos formatos según las necesidades del negocio:
+- Parquet (Recomendado para Big Data)
+- JSON
+- Bases de datos
+- S3, HDFS u otros sistemas distribuidos
+```scala
+resultadoDF.write.mode("overwrite").parquet("output/pedidos_procesados")
+```
+Si queremos guardar en una base de datos:
+
+```scala
+resultadoDF.write
+  .format("jdbc")
+  .option("url", "jdbc:mysql://localhost:3306/miDB")
+  .option("dbtable", "pedidos_procesados")
+  .option("user", "usuario")
+  .option("password", "contraseña")
+  .mode("append")
+  .save()
+```
+
+<hr>
+
+<a name="schema9"></a>
+
+# 9. Ejercicio
+Crea un pipeline ETL que haga lo siguiente:
+- Extraer datos desde dos archivos CSV.
+- Transformar los datos (limpiar nulos, convertir tipos, hacer agregaciones).
+- Guardar los resultados en formato Parquet.
+

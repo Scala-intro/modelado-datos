@@ -1,8 +1,8 @@
-# Modelado de Datos en Scala con Spark
+# Guía Completa de Modelado de Datos en Scala con Apache Spark
 
 
 1. [Introducción](#schema1)
-2. [Creación de una SparkSession](#schema2)
+2. [Introducción a Apache Spark](#schema2)
 3. [Modelado de Datos con Spark DataFrames y Datasets](#schema3)
 4. [Operaciones Básicas](#schema4)
 5. [Ejercicio 1: Análisis Simple de Datos de Usuarios](#schema5)
@@ -13,84 +13,20 @@
 
 <a name="schema1"></a>
 
-# Nivel Principiante
+# Nivel 1: Fundamentos de Scala y Apache Spark
+
+
 # 1. Introducción a Spark y Scala
 **Spark** es un motor de procesamiento de datos distribuido que permite manejar grandes volúmenes de información de manera eficiente. Scala es el lenguaje en el que Spark fue originalmente desarrollado, lo que lo hace muy eficiente para este tipo de tareas.
 
 `Scala` es un lenguaje de programación que combina características de programación funcional y orientada a objetos. Se ejecuta en la `JVM (Java Virtual Machine)` y es conocido por su concisión y su capacidad para interactuar con el código Java. Fue creado por Martin Odersky y su principal propósito es mejorar las deficiencias del lenguaje Java mientras mantiene su interoperabilidad.
-## **¿Qué es Apache Spark?**
-Apache Spark es un motor de procesamiento de datos en clústeres, de código abierto, que permite realizar análisis de grandes volúmenes de datos de manera rápida y eficiente. Spark se diseñó para ser más rápido que Hadoop MapReduce, especialmente en tareas iterativas y en memoria.
-
-### Características clave de Apache Spark:
-1. Procesamiento distribuido: Spark permite procesar grandes cantidades de datos de manera distribuida a través de múltiples nodos en un clúster, lo que le da un alto rendimiento.
-2. In-Memory Processing: Una de las ventajas más notables de Spark es su capacidad para realizar procesamiento en memoria. Esto significa que puede almacenar los datos en memoria RAM durante el procesamiento, lo que lo hace mucho más rápido que otros motores como Hadoop MapReduce, que dependen de operaciones de disco.
-3. Compatibilidad con diferentes fuentes de datos: Spark puede conectarse a una amplia variedad de fuentes de datos, como HDFS, S3, bases de datos relacionales, Kafka, y más.
-4. APIs flexibles: Spark soporta APIs en varios lenguajes de programación, como Scala, Python, Java, y R, lo que permite a los desarrolladores trabajar con el lenguaje que prefieran.
-5. Modelo de programación flexible: Spark proporciona un modelo de programación que permite realizar tareas como transformaciones de datos, operaciones de agregación, filtrado, etc.
-
-## **Arquitectura básica de Spark**
-La arquitectura de Apache Spark se basa en el modelo de programación de "map-reduce", pero mucho más eficiente. Está compuesta por varios componentes que trabajan en conjunto para ejecutar las tareas distribuidas en un clúster. Los principales componentes de la arquitectura de Spark son:
-1. Driver: El driver es el componente principal que maneja la ejecución de las aplicaciones Spark. Controla el ciclo de vida de la aplicación y coordina la ejecución de las tareas. Es responsable de enviar las tareas a los nodos del clúster y recoger los resultados.
-2. Cluster Manager: El cluster manager es el responsable de gestionar los recursos del clúster y de asignar trabajos a los nodos. Spark puede trabajar con varios gestores de clústeres, como:
-   - Standalone (Spark incluido como cluster manager)
-   - YARN (de Hadoop)
-   - Mesos (un clúster de recursos distribuido de código abierto)
-3. Worker Nodes: Los nodos de trabajo son los encargados de ejecutar las tareas enviadas por el driver. Cada worker ejecuta múltiples executors.
-4. Executors: Son los procesos que realizan el trabajo real en cada nodo. Un executor ejecuta las tareas y almacena los resultados en memoria o en disco según sea necesario.
-5. Tasks: Las tareas son las unidades más pequeñas de trabajo en Spark. Las tareas se dividen en unidades más pequeñas y se distribuyen entre los ejecutores en los nodos del clúster.
-   Diagrama básico de la arquitectura de Spark:
-```pgsql
-   
-   +-------------------+
-   |     Driver        |
-   +-------------------+
-   |
-   +-------------------+
-   | Cluster Manager   |
-   +-------------------+
-   |
-   +-------------------+
-   | Worker Nodes      |
-   | (Executors)       |
-   +-------------------+
-   |
-   +-------------------+
-   |   Tasks (Jobs)    |
-   +-------------------+
+```scala
+object HolaMundo {
+  def main(args: Array[String]): Unit = {
+    println("\u00a1Hola, Mundo!")
+  }
+}
 ```
-
-## **SparkContext y SparkSession**
-En Spark, `SparkContext` y `SparkSession` son componentes fundamentales para interactuar con el clúster y ejecutar tareas. Sin embargo, han evolucionado a lo largo del tiempo, y `SparkSession` es la forma más moderna de acceder a las funcionalidades de Spark.
-
-### SparkContext:
-SparkContext es el punto de entrada principal en una aplicación de Spark y se utiliza para conectarse a un clúster de Spark. Se encargaba de la mayoría de las operaciones en versiones anteriores de Spark antes de la introducción de SparkSession.
-  - Crear un SparkContext: Específicamente, el SparkContext se utiliza para inicializar el entorno de ejecución y acceder a los recursos del clúster.
-   ```scala
-  val sc = new SparkContext(conf)
-  ```
-  - Donde `conf` es la configuración de Spark (como la dirección del clúster y otros parámetros).
-
-### SparkSession:
-A partir de Spark 2.0, SparkSession se introdujo como la nueva interfaz unificada para trabajar con Spark. Integra el funcionamiento de SparkContext y otros componentes como SQLContext, HiveContext, etc. SparkSession es ahora la forma recomendada de interactuar con Spark, ya que proporciona acceso a todas las funcionalidades de Spark, incluida la API de SQL, DataFrames y Datasets.
-  - Crear un SparkSession:
-  ```scala
-  val spark = SparkSession.builder()
-        .appName("MiAplicacionSpark")
-        .config("spark.some.config.option", "config-value")
-        .getOrCreate()
-  ```
-  - Al usar SparkSession, no necesitas instanciar un SparkContext directamente, ya que SparkSession lo maneja internamente.
-
-### Comparación entre SparkContext y SparkSession:
-- SparkContext:
-  - Usado en versiones anteriores de Spark.
-  - Punto de entrada para la ejecución y recursos de Spark. 
-  - Responsable de la comunicación con el clúster.
-
-- SparkSession:
-  - Introducido en Spark 2.0 como una interfaz unificada.
-  - Permite trabajar con Spark SQL, DataFrames y Datasets.
-  - Internamente maneja SparkContext y otras funcionalidades de Spark.
 
 ## **Sintaxis básica de Scala**
 Scala utiliza una sintaxis que es más concisa que la de Java, pero a la vez mantiene la legibilidad y la estructura ordenada. Algunos de los puntos clave son:
@@ -105,10 +41,11 @@ val name: String = "Scala"
 val age: Int = 25
 ```
 - Funciones: Las funciones en Scala pueden definirse sin paréntesis para parámetros sin valores.
-  - def nombre_funcion(parametro:tipo): tipo_retorno = { instrucciones } 
+  - def nombre_funcion(parametro:tipo): tipo_retorno = { instrucciones }
 ```scala
 def greet(): String = "Hello, Scala!"
 ```
+
 ## **Tipos de datos y variables**
 Scala es un lenguaje fuertemente tipado, lo que significa que las variables tienen un tipo específico. Algunos de los tipos de datos más comunes en Scala son:
 
@@ -158,7 +95,6 @@ Scala es un lenguaje fuertemente tipado, lo que significa que las variables tien
   val person = ("John", 25)
   ```
 
-
 ## **Estructuras de control (if, for, while)**
 Scala soporta estructuras de control similares a otros lenguajes, como `if`, `for`, y `while`.
 
@@ -198,11 +134,95 @@ object HolaMundo {
 }
 ```
 
+
+
+
+
+
+
 <hr>
 
 <a name="schema2"></a>
 
-# 2. Creación de una SparkSession
+# 2. Introducción a Apache Spark
+## **¿Qué es Apache Spark?**
+Apache Spark es un motor de procesamiento de datos en clústeres, de código abierto, que permite realizar análisis de grandes volúmenes de datos de manera rápida y eficiente. Spark se diseñó para ser más rápido que Hadoop MapReduce, especialmente en tareas iterativas y en memoria.
+
+### Características clave de Apache Spark:
+1. Procesamiento distribuido: Spark permite procesar grandes cantidades de datos de manera distribuida a través de múltiples nodos en un clúster, lo que le da un alto rendimiento.
+2. In-Memory Processing: Una de las ventajas más notables de Spark es su capacidad para realizar procesamiento en memoria. Esto significa que puede almacenar los datos en memoria RAM durante el procesamiento, lo que lo hace mucho más rápido que otros motores como Hadoop MapReduce, que dependen de operaciones de disco.
+3. Compatibilidad con diferentes fuentes de datos: Spark puede conectarse a una amplia variedad de fuentes de datos, como HDFS, S3, bases de datos relacionales, Kafka, y más.
+4. APIs flexibles: Spark soporta APIs en varios lenguajes de programación, como Scala, Python, Java, y R, lo que permite a los desarrolladores trabajar con el lenguaje que prefieran.
+5. Modelo de programación flexible: Spark proporciona un modelo de programación que permite realizar tareas como transformaciones de datos, operaciones de agregación, filtrado, etc.
+
+## **Arquitectura básica de Spark**
+La arquitectura de Apache Spark se basa en el modelo de programación de "map-reduce", pero mucho más eficiente. Está compuesta por varios componentes que trabajan en conjunto para ejecutar las tareas distribuidas en un clúster. Los principales componentes de la arquitectura de Spark son:
+1. Driver: El driver es el componente principal que maneja la ejecución de las aplicaciones Spark. Controla el ciclo de vida de la aplicación y coordina la ejecución de las tareas. Es responsable de enviar las tareas a los nodos del clúster y recoger los resultados.
+2. Cluster Manager: El cluster manager es el responsable de gestionar los recursos del clúster y de asignar trabajos a los nodos. Spark puede trabajar con varios gestores de clústeres, como:
+  - Standalone (Spark incluido como cluster manager)
+  - YARN (de Hadoop)
+  - Mesos (un clúster de recursos distribuido de código abierto)
+3. Worker Nodes: Los nodos de trabajo son los encargados de ejecutar las tareas enviadas por el driver. Cada worker ejecuta múltiples executors.
+4. Executors: Son los procesos que realizan el trabajo real en cada nodo. Un executor ejecuta las tareas y almacena los resultados en memoria o en disco según sea necesario.
+5. Tasks: Las tareas son las unidades más pequeñas de trabajo en Spark. Las tareas se dividen en unidades más pequeñas y se distribuyen entre los ejecutores en los nodos del clúster.
+   Diagrama básico de la arquitectura de Spark:
+```pgsql
+   
+   +-------------------+
+   |     Driver        |
+   +-------------------+
+   |
+   +-------------------+
+   | Cluster Manager   |
+   +-------------------+
+   |
+   +-------------------+
+   | Worker Nodes      |
+   | (Executors)       |
+   +-------------------+
+   |
+   +-------------------+
+   |   Tasks (Jobs)    |
+   +-------------------+
+```
+
+## **SparkContext y SparkSession**
+En Spark, `SparkContext` y `SparkSession` son componentes fundamentales para interactuar con el clúster y ejecutar tareas. Sin embargo, han evolucionado a lo largo del tiempo, y `SparkSession` es la forma más moderna de acceder a las funcionalidades de Spark.
+
+### SparkContext:
+SparkContext es el punto de entrada principal en una aplicación de Spark y se utiliza para conectarse a un clúster de Spark. Se encargaba de la mayoría de las operaciones en versiones anteriores de Spark antes de la introducción de SparkSession.
+- Crear un SparkContext: Específicamente, el SparkContext se utiliza para inicializar el entorno de ejecución y acceder a los recursos del clúster.
+   ```scala
+  val sc = new SparkContext(conf)
+  ```
+- Donde `conf` es la configuración de Spark (como la dirección del clúster y otros parámetros).
+
+### SparkSession:
+A partir de Spark 2.0, SparkSession se introdujo como la nueva interfaz unificada para trabajar con Spark. Integra el funcionamiento de SparkContext y otros componentes como SQLContext, HiveContext, etc. SparkSession es ahora la forma recomendada de interactuar con Spark, ya que proporciona acceso a todas las funcionalidades de Spark, incluida la API de SQL, DataFrames y Datasets.
+- Crear un SparkSession:
+  ```scala
+  val spark = SparkSession.builder()
+        .appName("MiAplicacionSpark")
+        .config("spark.some.config.option", "config-value")
+        .getOrCreate()
+  ```
+- Al usar SparkSession, no necesitas instanciar un SparkContext directamente, ya que SparkSession lo maneja internamente.
+
+### Comparación entre SparkContext y SparkSession:
+- SparkContext:
+  - Usado en versiones anteriores de Spark.
+  - Punto de entrada para la ejecución y recursos de Spark.
+  - Responsable de la comunicación con el clúster.
+
+- SparkSession:
+  - Introducido en Spark 2.0 como una interfaz unificada.
+  - Permite trabajar con Spark SQL, DataFrames y Datasets.
+  - Internamente maneja SparkContext y otras funcionalidades de Spark.
+
+
+
+
+
 La `SparkSession` es el punto de entrada para trabajar con DataFrames en Spark.
 ```scala
 import org.apache.spark.sql.SparkSession

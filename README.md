@@ -10,6 +10,8 @@
 7. [Funciones Agregadas y de Ventana (Window Functions)](#schema7)
 8. [Diseño de Pipelines ETL](#schema8)
 9. [Ejercicio](#schema9)
+10. [Introducción a Spark Streaming](#schema10)
+11. [Integración con Kafka](#schema11)
 
 
 <hr>

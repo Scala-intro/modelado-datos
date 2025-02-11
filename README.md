@@ -647,6 +647,165 @@ Crea un pipeline ETL que haga lo siguiente:
 [ETL Pipeline con Scala y Spark"](./src/main/scala/etl.scala)
 
 
+# Nivel 4: Procesamiento en Tiempo Real con Spark Streaming
+
 <hr>
 
 <a name="schema10"></a>
+
+# 10. Introducción a Spark Streaming
+
+`Spark Streaming` es una extensión de Apache Spark que permite el procesamiento de datos en tiempo real. Permite procesar flujos de datos de manera continua y de forma paralela, similar al procesamiento por lotes (batch), pero con la diferencia de que los datos se procesan en micro-lotes de un tamaño determinado.
+
+## Arquitectura de Spark Streaming
+La arquitectura de Spark Streaming se basa en micro-lotes, lo que significa que los datos de un flujo (stream) se dividen en pequeños lotes de tiempo y son procesados por Spark.
+1. Entrada de Datos (Stream Sources): Los datos provienen de diversas fuentes como Kafka, Flume, Kinesis, o sockets.
+2. Stream Context: El StreamingContext es el componente central que define el procesamiento del flujo.
+3. Transformaciones y Acciones: Se pueden aplicar operaciones de transformación a los micro-lotes, como map(), flatMap(), reduce(), etc.
+4. Salida (Sinks): Los resultados procesados se pueden almacenar en bases de datos, archivos HDFS, o sistemas de almacenamiento como Amazon S3.
+
+## Creación de flujos de datos en tiempo real
+En este ejemplo básico, se crea un flujo de datos que se lee desde un socket y se muestra en la consola:
+```scala
+import org.apache.spark.streaming._
+
+object SparkStreamingExample {
+  def main(args: Array[String]): Unit = {
+    
+    // Crear un contexto de streaming con intervalo de 5 segundos
+    val ssc = new StreamingContext(spark.sparkContext, Seconds(5))
+
+    // Crear un flujo de datos que lee desde un socket en localhost:9999
+    val lineas = ssc.socketTextStream("localhost", 9999)
+
+    // Imprimir las líneas que llegan al flujo
+    lineas.print()
+
+    // Iniciar el procesamiento
+    ssc.start()
+
+    // Esperar hasta que el flujo termine
+    ssc.awaitTermination()
+  }
+}
+```
+Explicación:
+
+1. `StreamingContext`: El punto de entrada de Spark Streaming. Aquí se establece el intervalo de tiempo de los micro-lotes (5 segundos en este caso).
+2. `socketTextStream`: Lee datos desde un socket en un puerto específico (localhost:9999 en este ejemplo).
+3. `print()`: Muestra las líneas de texto que llegan al flujo en la consola.
+4. `start()`: Inicia el procesamiento del flujo.
+5. `awaitTermination(): Mantiene el proceso en ejecución hasta que se termine.
+
+
+<hr>
+
+<a name="schema11"></a>
+
+# 11 Integración con Kafka
+
+Apache Kafka es una plataforma de mensajería distribuida que permite la transmisión de datos en tiempo real. Spark Streaming tiene integración nativa con Kafka, lo que permite procesar mensajes de Kafka de forma continua.
+
+## Lectura de datos desde Kafka
+
+Para leer datos desde un tópico de Kafka en Spark Streaming, necesitamos agregar las dependencias de Kafka para Spark. La manera básica de leer desde Kafka es:
+```scala
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.kafka010._
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.spark.sql.SparkSession
+
+object KafkaStreamExample {
+  def main(args: Array[String]): Unit = {
+
+    // Crear un SparkSession
+    val spark = SparkSession.builder()
+      .appName("Kafka Spark Streaming")
+      .getOrCreate()
+
+    // Crear un contexto de Streaming
+    val ssc = new StreamingContext(spark.sparkContext, Seconds(5))
+
+    // Configuración de Kafka
+    val kafkaParams = Map(
+      "bootstrap.servers" -> "localhost:9092", // Kafka broker
+      "key.deserializer" -> classOf[StringDeserializer],
+      "value.deserializer" -> classOf[StringDeserializer],
+      "group.id" -> "spark-streaming-group",
+      "auto.offset.reset" -> "latest"
+    )
+
+    // Definir el tópico desde el que leeremos los mensajes
+    val topics = Array("topic_name")
+
+    // Leer los datos desde Kafka
+    val kafkaStream = KafkaUtils.createDirectStream[String, String](
+      ssc,
+      LocationStrategies.PreferConsistent,
+      ConsumerStrategies.Subscribe[String, String](topics, kafkaParams)
+    )
+
+    // Extraer el valor de los mensajes
+    val mensajes = kafkaStream.map(record => record.value)
+
+    // Mostrar los mensajes en la consola
+    mensajes.print()
+
+    // Iniciar el procesamiento
+    ssc.start()
+
+    // Esperar hasta que se termine el flujo
+    ssc.awaitTermination()
+  }
+}
+
+```
+
+1. Configuración de Kafka:
+
+- `"bootstrap.servers"`: Dirección del servidor Kafka.
+- `"key.deserializer"` y `"value.deserializer"`: Especifican cómo deserializar los mensajes (en este caso, como cadenas de texto).
+- `"group.id"`: El grupo de consumidores en Kafka.
+- `"auto.offset.reset"`: Define qué hacer si no se encuentra un offset previo (por ejemplo, latest lee desde los mensajes más recientes).
+
+2. KafkaUtils.createDirectStream:
+- Leemos datos de Kafka directamente en el flujo de Spark Streaming.
+- `LocationStrategies.PreferConsistent`: Usa la estrategia de distribución más balanceada.
+- `ConsumerStrategies.Subscribe`: Se suscribe al tópico de Kafka especificado. 
+
+3. `map(record => record.value)`: Extrae el valor de cada mensaje recibido.
+
+4. `print()`: Muestra los mensajes en la consola.
+
+## Procesamiento en tiempo real y almacenamiento en bases de datos
+Una vez que los datos se leen desde Kafka, podemos realizar cualquier tipo de procesamiento sobre ellos (como análisis, agregaciones, filtrado, etc.). Después, los resultados pueden almacenarse en bases de datos, como MySQL, Cassandra, o HDFS.
+
+Ejemplo de almacenamiento de datos procesados en una base de datos:
+```scala
+val mensajes = kafkaStream.map(record => record.value)
+
+val resultado = mensajes.transform(rdd => {
+  // Realizar transformaciones sobre los datos
+  rdd.map(msg => (msg, msg.length)) // Ejemplo de transformar los mensajes
+})
+
+resultado.foreachRDD(rdd => {
+  rdd.foreachPartition(partition => {
+    // Aquí se conecta a la base de datos y guarda los resultados
+    val conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/base_datos", "usuario", "contraseña")
+    partition.foreach(msg => {
+      val stmt = conn.prepareStatement("INSERT INTO tabla_mensajes (mensaje, longitud) VALUES (?, ?)")
+      stmt.setString(1, msg._1)
+      stmt.setInt(2, msg._2)
+      stmt.executeUpdate()
+    })
+    conn.close()
+  })
+})
+
+```
+
+1. `transform()`: Permite realizar transformaciones sobre el RDD de cada micro-lote.
+2. `foreachRDD()`: Permite acceder a cada RDD de los micro-lotes y procesarlos.
+3. Conexión a MySQL: Dentro de foreachPartition, nos conectamos a la base de datos y almacenamos los resultados procesados.

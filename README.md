@@ -12,14 +12,19 @@
 9. [Ejercicio](#schema9)
 10. [Introducción a Spark Streaming](#schema10)
 11. [Integración con Kafka](#schema11)
+12. [Configuración de Clúster de Spark](#schema12)
+13. [Optimización Avanzada en Spark](#schema13)
+14. [Ejercicio: Optimizar un Pipeline ETL para más de 1M de registros](#schema14)
+
 
 
 <hr>
 
-<a name="schema1"></a>
-
 # Nivel 1: Fundamentos de Scala y Apache Spark
 
+<hr>
+
+<a name="schema1"></a>
 
 # 1. Introducción a Spark y Scala
 **Spark** es un motor de procesamiento de datos distribuido que permite manejar grandes volúmenes de información de manera eficiente. Scala es el lenguaje en el que Spark fue originalmente desarrollado, lo que lo hace muy eficiente para este tipo de tareas.
@@ -549,6 +554,8 @@ df.withColumn("nueva_columna", funcionVentana.over(ventana))
 
 
 
+<hr>
+
 # Nivel 3: Diseño de Pipelines de Datos Masivos
 
 <hr>
@@ -648,6 +655,7 @@ Crea un pipeline ETL que haga lo siguiente:
 
 [ETL Pipeline con Scala y Spark"](./src/main/scala/etl.scala)
 
+<hr>
 
 # Nivel 4: Procesamiento en Tiempo Real con Spark Streaming
 
@@ -811,3 +819,223 @@ resultado.foreachRDD(rdd => {
 1. `transform()`: Permite realizar transformaciones sobre el RDD de cada micro-lote.
 2. `foreachRDD()`: Permite acceder a cada RDD de los micro-lotes y procesarlos.
 3. Conexión a MySQL: Dentro de foreachPartition, nos conectamos a la base de datos y almacenamos los resultados procesados.
+
+<hr>
+
+# Nivel 5: Entornos Distribuidos y Optimización Avanzada
+
+<hr>
+
+<a name="schema12"></a>
+
+# 12. Configuración de Clúster de Spark
+
+## Configuración de Spark en Modo Standalone
+Apache Spark puede ejecutarse en diferentes modos de despliegue:
+1. Local (para desarrollo y pruebas).
+2. Standalone (clúster dedicado sin dependencia de otros sistemas).
+3. YARN (usado con Hadoop).
+4. Mesos (gestión avanzada de recursos).
+5. Kubernetes (para contenedores).
+
+En el modo Standalone, Spark se ejecuta como un clúster con un Master y varios Workers. Para configurarlo:
+
+1. Instalar y Configurar Spark en Modo Standalone
+Si ya tienes Spark instalado en tu máquina, puedes iniciar un clúster Standalone ejecutando:
+
+```bash
+# Iniciar el Master
+./sbin/start-master.sh
+
+# Iniciar un Worker y conectarlo al Master
+./sbin/start-worker.sh spark://<MASTER-IP>:7077  
+```
+Para ver la interfaz de administración, ve a http://localhost:8080
+
+2. Ejecutar una Aplicación en el Clúster
+Podemos ejecutar un job en el clúster con:
+
+```bash
+./bin/spark-submit \
+--master spark://<MASTER-IP>:7077 \
+--deploy-mode client \
+--executor-memory 2G \
+--total-executor-cores 4 \
+mi_script.py
+```
+Este comando ejecuta mi_script.py en el clúster, asignándole 2GB de RAM por ejecutor y 4 núcleos en total.
+
+## Uso de Docker para Simular Entornos Distribuidos
+Para simular un clúster distribuido en una sola máquina, puedes usar Docker con Docker Compose.
+
+1. Crear un Archivo docker-compose.yml para Spark
+```yaml
+version: '3'
+services:
+spark-master:
+image: bitnami/spark:latest
+container_name: spark-master
+environment:
+- SPARK_MODE=master
+ports:
+- "8080:8080"
+- "7077:7077"
+
+spark-worker:
+image: bitnami/spark:latest
+container_name: spark-worker
+environment:
+- SPARK_MODE=worker
+- SPARK_MASTER_URL=spark://spark-master:7077
+depends_on:
+- spark-master
+```
+2. Iniciar el Clúster
+Ejecuta:
+
+```bash
+docker-compose up -d
+```
+Esto iniciará un clúster con un Master y un Worker.
+
+<hr>
+
+<a name="schema13"></a>
+
+# 13. Optimización Avanzada en Spark
+
+## Catalyst Optimizer y Tungsten Engine
+Apache Spark optimiza automáticamente la ejecución de consultas mediante Catalyst Optimizer y Tungsten Engine.
+
+- Catalyst Optimizer:
+  - Optimiza el plan lógico y físico de ejecución.
+  - Mejora consultas SQL y DataFrames. 
+  - Reordena filtros y proyecciones para minimizar operaciones costosas. 
+
+- Tungsten Engine:
+  - Usa código de bajo nivel para optimizar la ejecución.
+  - Maneja memoria de forma eficiente, evitando la recolección de basura de Java (GC).
+  - Mejora el rendimiento con ejecución vectorizada.
+
+Ejemplo de Catalyst en acción:
+
+```scala
+val df = spark.read.parquet("data.parquet")
+df.filter($"edad" > 18).select("nombre", "edad").explain()
+```
+El comando explain() muestra el plan de ejecución optimizado.
+
+
+## Tuning de Parámetros de Spark
+Para mejorar el rendimiento, ajustamos parámetros en `spark-submit` o en `spark-defaults.conf`:
+
+1. Configuración de memoria
+
+```bash
+--executor-memory 4G
+--driver-memory 2G
+```
+
+2. Ajuste de paralelismo
+
+```bash
+--conf spark.default.parallelism=100
+--conf spark.sql.shuffle.partitions=200
+```
+3. Usar cache y persistencia
+
+```scala
+val df = spark.read.parquet("data.parquet").cache()
+df.count() // Fuerza la carga en memoria
+```
+4. Repartition vs Coalesce
+- `repartition(n)`: Aumenta el número de particiones, útil para procesamiento distribuido.
+- `coalesce(n)`: Reduce el número de particiones, útil para escribir en disco.
+```scala
+val dfRepart = df.repartition(10) // Mejora procesamiento en paralelo
+val dfCoalesced = df.coalesce(2)  // Reduce archivos pequeños
+```
+
+<hr>
+
+<a name="schema14"></a>
+
+# 14. Ejercicio: Optimizar un Pipeline ETL para más de 1M de registros
+
+1. Cargar un dataset grande (+1M de filas), [NYC Yellow Taxi Trip Data](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data)
+2. Optimizar la extracción, transformación y carga.
+3. Usar técnicas avanzadas de rendimiento.
+
+[Optimized ETL Pipeline](src/main/scala/optimized_etl.scala)
+
+## Optimización 1: Ajustar el Número de Particiones
+```scala
+// Reparticionar el DataFrame para mejorar el rendimiento en clúster
+val repartitionedDF = taxiDF.repartition(8) // Ajusta según el tamaño del dataset
+```
+- ¿Por qué?
+  - Evita particiones demasiado pequeñas que causan overhead.
+  - Evita particiones demasiado grandes que generan out-of-memory.
+  - Ajusta el número de particiones en función del tamaño de los datos y los recursos disponibles.
+
+## Optimización 2: Cachear los Datos para Reutilización
+```scala
+import org.apache.spark.sql.functions._
+
+val tarifaPorDiaDF = taxiDF
+.withColumn("pickup_date", to_date(col("tpep_pickup_datetime")))
+.groupBy("pickup_date")
+.agg(avg("fare_amount").alias("tarifa_promedio"))
+.orderBy("pickup_date")
+.cache() // ⚡ Almacena en memoria para consultas rápidas
+
+tarifaPorDiaDF.count() // 🔥 Acción para materializar el cache
+```
+- ¿Por qué?
+  - Reduce recomputaciones si reutilizas el DataFrame varias veces.
+  - Evita recalcular desde el origen, mejorando la latencia.
+    
+## Optimización 3: Escribir en Parquet con Compresión
+```scala
+tarifaPorDiaDF.write
+.mode("overwrite")
+.option("compression", "snappy") // 🔥 Usa compresión Snappy para lecturas rápidas
+.parquet("data/tarifa_por_dia_optimized.parquet")
+```
+- ¿Por qué?
+  - Parquet ya es columnar, pero Snappy mejora aún más las lecturas.
+  - Reduce el tamaño del archivo sin afectar el rendimiento.
+## Optimización 4: Usar coalesce() Antes de Guardar
+Si el número de archivos Parquet generados es demasiado alto, usa coalesce() para reducirlos:
+
+```scala
+tarifaPorDiaDF
+.coalesce(4) // 🔥 Reduce la cantidad de archivos generados
+.write.mode("overwrite").parquet("data/tarifa_por_dia_optimized.parquet")
+```
+- ¿Por qué?
+  - Menos archivos significa menos overhead en la lectura.
+  - Útil cuando escribes en HDFS, S3 o Data Lake.
+## Optimización 5: Evitar la Inferencia Automática de Schema
+En lugar de inferSchema, define el schema manualmente para evitar el overhead de lectura:
+
+```scala
+import org.apache.spark.sql.types._
+
+val schema = StructType(Array(
+StructField("VendorID", IntegerType, true),
+StructField("tpep_pickup_datetime", TimestampType, true),
+StructField("tpep_dropoff_datetime", TimestampType, true),
+StructField("passenger_count", IntegerType, true),
+StructField("trip_distance", DoubleType, true),
+StructField("fare_amount", DoubleType, true)
+))
+
+val taxiDF = spark.read
+.option("header", "true")
+.schema(schema) // 🔥 Especificar el schema evita la inferencia costosa
+.csv("data/yellow_tripdata_2015-01.csv")
+```
+- ¿Por qué?
+  - Evita que Spark escanee todo el archivo para inferir los tipos.
+  - Reduce el tiempo de lectura inicial, útil en grandes datasets.

@@ -1039,3 +1039,104 @@ val taxiDF = spark.read
 - ¿Por qué?
   - Evita que Spark escanee todo el archivo para inferir los tipos.
   - Reduce el tiempo de lectura inicial, útil en grandes datasets.
+
+
+
+<hr>
+
+
+
+# Nivel 6:  Integración con Bases de Datos
+
+<hr>
+
+<a name="schema15"></a>
+
+# 15. Integración con Bases de Datos
+
+Uno de los aspectos clave en la ingeniería de datos es la integración con bases de datos, tanto relacionales como NoSQL. Spark facilita esta integración mediante conectores específicos para cada tipo de almacenamiento.
+
+## Conexión a bases de datos relacionales (JDBC)
+Spark permite conectarse a bases de datos relacionales como `PostgreSQL`, `MySQL`, `SQL Server` y `Oracle` mediante JDBC. Esto permite leer y escribir datos en estas bases de datos de manera eficiente.
+
+### Ejemplo: Conectar Spark a PostgreSQL
+```scala
+val jdbcUrl = "jdbc:postgresql://localhost:5432/mi_base_de_datos"
+val connectionProperties = new java.util.Properties()
+connectionProperties.setProperty("user", "usuario")
+connectionProperties.setProperty("password", "contraseña")
+connectionProperties.setProperty("driver", "org.postgresql.Driver")
+
+// Leer desde PostgreSQL
+val df = spark.read
+.jdbc(jdbcUrl, "tabla_ejemplo", connectionProperties)
+
+df.show()
+
+// Escribir en PostgreSQL
+df.write
+.mode("append") // También puede ser "overwrite"
+.jdbc(jdbcUrl, "tabla_destino", connectionProperties)
+```
+### Consideraciones:
+
+- JDBC no es eficiente para grandes volúmenes de datos, por lo que se recomienda usar particionamiento (`partitionColumn`, `lowerBound`, `upperBound`, `numPartitions`).
+- Es posible optimizar las escrituras usando `batch inserts`.
+
+## Lectura y escritura en NoSQL (Cassandra, MongoDB)
+Muchas arquitecturas de big data utilizan bases de datos NoSQL para el almacenamiento de datos estructurados y semiestructurados. Spark se integra fácilmente con bases de datos como `Cassandra` y `MongoDB`.
+
+### Ejemplo: Integración con Cassandra
+Para leer y escribir datos en Apache Cassandra, se utiliza el conector `spark-cassandra-connector`.
+```scala
+import org.apache.spark.sql.SparkSession
+
+val spark = SparkSession.builder()
+  .appName("SparkCassandraExample")
+  .config("spark.cassandra.connection.host", "127.0.0.1")
+  .getOrCreate()
+
+// Leer datos de Cassandra
+val df = spark.read
+  .format("org.apache.spark.sql.cassandra")
+  .options(Map("table" -> "usuarios", "keyspace" -> "mi_keyspace"))
+  .load()
+
+df.show()
+
+// Escribir datos en Cassandra
+df.write
+  .format("org.apache.spark.sql.cassandra")
+  .options(Map("table" -> "usuarios_destino", "keyspace" -> "mi_keyspace"))
+  .mode("append")
+  .save()
+```
+### Consideraciones:
+
+- Cassandra es altamente escalable y se recomienda para casos donde la latencia de lectura no es crítica.
+- Se debe elegir una clave de partición adecuada para evitar hotspots en los nodos.
+
+### Ejemplo: Integración con MongoDB
+Para leer y escribir en MongoDB, se usa el conector `spark-mongodb-connector`.
+
+```scala
+val mongoUri = "mongodb://127.0.0.1/mi_base.mi_coleccion"
+
+val dfMongo = spark.read
+.format("mongo")
+.option("uri", mongoUri)
+.load()
+
+dfMongo.show()
+
+// Escribir en MongoDB
+dfMongo.write
+.format("mongo")
+.option("uri", mongoUri)
+.mode("append")
+.save()
+```
+### Consideraciones:
+
+- MongoDB es útil para almacenar datos semiestructurados, como JSON o documentos anidados.
+- Spark permite filtrar, transformar y agregar datos directamente sobre MongoDB.
